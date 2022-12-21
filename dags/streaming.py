@@ -1,19 +1,10 @@
 from datetime import datetime, timedelta
-from airflow import DAG
+from airflow import DAG, Dataset
 from airflow.configuration import conf
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperatorAsync
 
-from streaming import StreamingTimetable
+# from streaming import StreamingTimetable
 
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    # 'start_date': datetime(2022, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
 
 namespace = conf.get('kubernetes', 'NAMESPACE')
 # This will detect the default namespace locally and read the
@@ -25,20 +16,32 @@ else:
     in_cluster = True
     config_file = None
 
-DAG_ID = "lets_stream"
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dataset = Dataset("stream")
 
 with DAG(
-    dag_id=DAG_ID, 
-    timetable=StreamingTimetable(dag_id=DAG_ID),
+    dag_id="lets_stream", 
+    catchup=False,
     default_args=default_args,
+    max_active_runs=1,
     start_date=datetime(2022,1,1),
-    catchup=False
+    schedule=[dataset],
+    # timetable=StreamingTimetable(dag_id=DAG_ID),
 ) as dag:
     KubernetesPodOperatorAsync(
         task_id="stream",
         poll_interval=20,
         image="busybox",
-        cmds=["/bin/sh", "-c", "sleep 30", "exit 1"],
+        cmds=["/bin/sh", "-c", "sleep 30", "bork"],
         name="stream",
         # resources=compute_resources,
         namespace=namespace,
@@ -47,4 +50,5 @@ with DAG(
         config_file=config_file,
         # is_delete_operator_pod=True,
         get_logs=True,
+        outlets=[dataset]
     )

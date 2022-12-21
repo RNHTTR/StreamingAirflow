@@ -1,7 +1,9 @@
 Hacky Airflow Streaming
 ========
 
-This project uses the [Astro CLI](https://github.com/astronomer/astro-cli) to quickly get Apache Airflow up & running. It uses an asynchronous version of the KubernetesPodOperator, i.e. [`KubernetesPodOperatorAsync`](https://registry.astronomer.io/providers/astronomer-providers/modules/kubernetespodoperatorasync) along with a [custom timetable](https://airflow.apache.org/docs/apache-airflow/stable/howto/timetable.html) to allow for streaming applications running on Airflow without consuming Airflow native resources (e.g. [pool slots](https://airflow.apache.org/docs/apache-airflow/stable/concepts/pools.html), [parallelism](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#parallelism)).
+This project uses the [Astro CLI](https://github.com/astronomer/astro-cli) to quickly get Apache Airflow up & running. It uses an asynchronous version of the KubernetesPodOperator, i.e. [`KubernetesPodOperatorAsync`](https://registry.astronomer.io/providers/astronomer-providers/modules/kubernetespodoperatorasync) along with [data-aware scheduling](https://airflow.apache.org/docs/apache-airflow/stable/concepts/datasets.html) to enable streaming applications running on Airflow without consuming Airflow native resources (e.g. [pool slots](https://airflow.apache.org/docs/apache-airflow/stable/concepts/pools.html), [parallelism](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#parallelism)). 
+
+This, at least in theory, enables Airflow to be a single pane of glass for both batch and streaming jobs; alerts, failure handling, and monitoring could be handled _in_ and _by_ Airflow.
 
 Project Contents
 ================
