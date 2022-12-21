@@ -10,7 +10,7 @@ Project Contents
 
 In addition to other useful built-ins that ship with `astro dev init`, the project contains the following files and folders:
 
-- dags: This folder contains the Python files for Airflow DAGs. The example streaming DAG is `streamingdag.py`.
+- dags: This folder contains the Python files for Airflow DAGs. The example streaming DAG is `streaming.py`.
 - Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience.
 - plugins: Add custom or community plugins for your project to this file. It is empty by default.
 
