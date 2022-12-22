@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from airflow import DAG, Dataset
 from airflow.configuration import conf
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.bash import BashOperator
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperatorAsync
 
 
@@ -56,4 +57,10 @@ with DAG(
         outlets=[dataset]
     )
 
-    stream_job >> restart
+    mark_failed = BashOperator(
+        task_id="mark_failed",
+        trigger_rule="all_done",
+        bash_command="echo Upstream stream job failed. Will now fail successfully; exit 1",
+    )
+
+    stream_job >> restart >> mark_failed
