@@ -21,14 +21,12 @@ default_args = {
     'depends_on_past': False,
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
 }
 
 dataset = Dataset("stream")
 
 with DAG(
-    dag_id="lets_stream", 
+    dag_id="lets_stream_successfully", 
     catchup=False,
     default_args=default_args,
     max_active_runs=1,
@@ -37,18 +35,19 @@ with DAG(
 ) as dag:
     stream_job = KubernetesPodOperatorAsync(
         task_id="stream",
-        poll_interval=20,
-        image="busybox",
-        cmds=["/bin/sh", "-c", "sleep 30; exit 1"],
-        name="stream",
-        # resources=compute_resources,
-        namespace=namespace,
-        in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
         cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
+        cmds=["/bin/sh", "-c", "while true; do sleep 10000; done"],
         config_file=config_file,
-        is_delete_operator_pod=True,
         get_logs=True,
-        outlets=[dataset]
+        image="busybox",
+        in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
+        is_delete_operator_pod=True,
+        name="stream",
+        namespace=namespace,
+        outlets=[dataset],
+        poll_interval=20,
+        retries=1,
+        retry_delay=timedelta(seconds=10)
     )
 
     restart = EmptyOperator(
