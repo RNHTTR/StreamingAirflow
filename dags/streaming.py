@@ -1,9 +1,8 @@
 from datetime import datetime, timedelta
 from airflow import DAG, Dataset
 from airflow.configuration import conf
+from airflow.operators.empty import EmptyOperator
 from astronomer.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperatorAsync
-
-# from streaming import StreamingTimetable
 
 
 namespace = conf.get('kubernetes', 'NAMESPACE')
@@ -15,7 +14,6 @@ if namespace =='default':
 else:
     in_cluster = True
     config_file = None
-
 
 default_args = {
     'owner': 'airflow',
@@ -35,20 +33,27 @@ with DAG(
     max_active_runs=1,
     start_date=datetime(2022,1,1),
     schedule=[dataset],
-    # timetable=StreamingTimetable(dag_id=DAG_ID),
 ) as dag:
-    KubernetesPodOperatorAsync(
+    stream_job = KubernetesPodOperatorAsync(
         task_id="stream",
         poll_interval=20,
         image="busybox",
-        cmds=["/bin/sh", "-c", "sleep 30", "bork"],
+        cmds=["/bin/sh", "-c", "sleep 30; exit 1"],
         name="stream",
         # resources=compute_resources,
         namespace=namespace,
         in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
         cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
         config_file=config_file,
-        # is_delete_operator_pod=True,
+        is_delete_operator_pod=True,
         get_logs=True,
         outlets=[dataset]
     )
+
+    restart = EmptyOperator(
+        task_id="restart",
+        trigger_rule="all_done",
+        outlets=[dataset]
+    )
+
+    stream_job >> restart
